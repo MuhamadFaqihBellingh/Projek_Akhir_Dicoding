@@ -10,7 +10,7 @@ st.markdown("Dibuat oleh **Muhamad Faqih** Mahasiswa **Universitas Terbuka**")
 # Memuat data CSV
 @st.cache_data
 def load_data():
-    return pd.read_csv(r'C:\Users\Lenovo\OneDrive\Documents\Submission\dashboard\main_data.csv')
+    return pd.read_csv('main.csv')
 
 bikes_df = load_data()
 
