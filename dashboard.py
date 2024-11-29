@@ -10,25 +10,71 @@ st.markdown("Dibuat oleh **Muhamad Faqih** Mahasiswa **Universitas Terbuka**")
 # Memuat data CSV
 @st.cache_data
 def load_data():
-    return pd.read_csv('main_data.csv')
+    return pd.read_csv(r'C:\Users\Lenovo\OneDrive\Documents\Submission\dashboard\main_data.csv')
 
 bikes_df = load_data()
 
 # Agregasi jumlah penyewaan berdasarkan hari dalam seminggu
 day_of_week_summary = bikes_df.groupby('day_of_week')['total_rentals'].sum().reset_index()
 
+season_mapping = {
+    1: "Spring",
+    2: "Summer",
+    3: "Fall",
+    4: "Winter"
+}
+bikes_df['season'] = bikes_df['season'].replace(season_mapping)
 
-# Filter Data untuk Hari Tertentu
-st.sidebar.subheader("Filter Data Berdasarkan Hari")
-selected_day = st.sidebar.selectbox("Pilih Hari dalam Seminggu", options=bikes_df['day_of_week'].unique())
-filtered_data = bikes_df[bikes_df['day_of_week'] == selected_day]
+weather_mapping = {
+    1: "Clear",
+    2: "Cloudy",
+    3: "Rainy",
+    4: "Snowy"
+}
 
-st.subheader(f"Data Penyewaan untuk Hari: {selected_day}")
+bikes_df['weather_condition'] = bikes_df['weather_condition'].replace(weather_mapping)
+
+
+day_of_week_mapping = {
+    0: "Monday",
+    1: "Tuesday",
+    2: "Wednesday",
+    3: "Thursday",
+    4: "Friday",
+    5: "Saturday",
+    6: "Sunday"
+}
+bikes_df['day_of_week'] = bikes_df['day_of_week'].replace(day_of_week_mapping)
+
+month_mapping = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December"
+}
+bikes_df['month'] = bikes_df['month'].replace(month_mapping)
+bikes_df['is_working_day'] = bikes_df['is_working_day'].replace({1: 'Work', 0: 'No-Work'})
+
+# Filter Data untuk Musim
+st.sidebar.subheader("Filter Data Berdasarkan Musim")
+selected_season = st.sidebar.selectbox("Pilih Musim", options=bikes_df['season'].unique())
+filtered_data = bikes_df[bikes_df['season'] == selected_season]
+
+st.subheader(f"Data Penyewaan untuk Musim: {selected_season}")
 st.dataframe(filtered_data)
 
-# Tambahkan Statistik Deskriptif
+# Statistik Deskriptif
 st.subheader("Statistik Deskriptif")
-st.write(day_of_week_summary.describe())
+st.write(filtered_data.describe())
+
 
 # Visualisasi: Jumlah Penyewaan Berdasarkan Hari dalam Seminggu
 st.subheader("Tren Penyewaan Berdasarkan Hari dalam Seminggu")
@@ -50,29 +96,6 @@ ax.set_title('Perbandingan Penyewaan Sepeda: Casual vs Registered Users')
 ax.set_xlabel('Jenis Pengguna')
 ax.set_ylabel('Jumlah Penyewaan')
 plt.legend()
-st.pyplot(fig)
-
-# Analisis Clustering: Permintaan Tinggi vs Rendah
-st.subheader("Analisis Permintaan Tinggi vs Rendah")
-# Mengelompokkan data berdasarkan jumlah peminjaman sepeda
-grouped_data = bikes_df.groupby(['hour', 'weather_condition'])['total_rentals'].sum().reset_index()
-high_demand = grouped_data[grouped_data['total_rentals'] > grouped_data['total_rentals'].quantile(0.75)]
-low_demand = grouped_data[grouped_data['total_rentals'] < grouped_data['total_rentals'].quantile(0.25)]
-
-# Plot High Demand
-fig, ax = plt.subplots(figsize=(10, 6))
-sns.scatterplot(data=high_demand, x='hour', y='total_rentals', hue='weather_condition', palette='coolwarm', s=100, ax=ax)
-ax.set_title('High Demand Clusters: Hourly Rentals by Weather Condition')
-ax.set_xlabel('Hour of the Day')
-ax.set_ylabel('Total Rentals')
-st.pyplot(fig)
-
-# Plot Low Demand
-fig, ax = plt.subplots(figsize=(10, 6))
-sns.scatterplot(data=low_demand, x='hour', y='total_rentals', hue='weather_condition', palette='coolwarm', s=100, marker='X', ax=ax)
-ax.set_title('Low Demand Clusters: Hourly Rentals by Weather Condition')
-ax.set_xlabel('Hour of the Day')
-ax.set_ylabel('Total Rentals')
 st.pyplot(fig)
 
 # Agregasi jumlah penyewaan berdasarkan status liburan
@@ -100,7 +123,10 @@ working_day_summary = bikes_df.groupby('is_working_day')['total_rentals'].sum().
 # Mengubah kolom is_working_day menjadi label yang lebih mudah dipahami
 working_day_summary['is_working_day'] = working_day_summary['is_working_day'].map({0: 'Non-Working Day', 1: 'Working Day'})
 
-# Visualisasi: Jumlah Penyewaan Berdasarkan Hari Kerja
+# Misalnya 'working_day_summary' adalah dataframe yang sudah difilter dan diproses
+working_day_summary = bikes_df.groupby('is_working_day')['total_rentals'].sum().reset_index()
+
+# Visualisasi jumlah penyewaan berdasarkan hari kerja
 st.subheader("Jumlah Penyewaan Berdasarkan Hari Kerja")
 fig, ax = plt.subplots(figsize=(8, 6))
 sns.barplot(x='is_working_day', y='total_rentals', data=working_day_summary, palette='Blues', ax=ax)
